@@ -8,33 +8,12 @@
     "phoneNumber": "0934552101",
     "image": "http://localhost:3000/uploads/1730033323200.png",
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFsYXdlZndlZndlZiIsInBob25lTnVtYmVyIjoiMDkzNDU1MjEwMSIsImlhdCI6MTczMDAzMzMyMywiZXhwIjoxNzMwMDM2OTIzfQ.vIZ4U3JIRFx8xM7kSnL3Akv3WMg_aHOvSEg8A4n9-gk",
-    "concats": [
+    "contacts": [
       2,
       3,
       34
-    ]
-  }
-]
-
-[
-  {
-    "from": 1,
-    "to": 2,
-    "message": 1,
-  }
-]
-
-[
-  {
-    "id": 1,
-    "text": "hello",
-  }
-]
-
-
-[
-  {
-    "id": 1,
-    "image": "http://localhost:3000/uploads/1730033323200.png",
+    ],
+  
+   
   }
 ]

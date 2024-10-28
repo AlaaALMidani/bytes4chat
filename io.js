@@ -9,18 +9,28 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-io.on("connection", (socket) => {
-  console.log("a user connected");
-  socket.on("chat message", (msg) => {
-    console.log("message: " + msg);
+
+io.on('connection', (socket) => {
+  
+  console.log('User connected:', socket.id);
+
+  socket.on('join', (userId) => {
+    socket.userId = userId; // Store user ID on the socket
+    socket.join(userId); // Join the room associated with the user ID
+    console.log(`User ${userId} joined room ${userId}`);
   });
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.userId);
   });
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
+
+  socket.on('privateMessage', (recipientId, message) => {
+    // Send the message to the recipient
+    io.to(recipientId).emit('privateMessage', socket.userId, message);
+  }); 
+
 });
+
 
 app.get("/", (req, res) => {
   res.sendFile(join(__dirname, "index.html"));
