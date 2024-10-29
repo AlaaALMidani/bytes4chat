@@ -1,65 +1,42 @@
-[
-  {
-    from: 1,
-    to: 2,
-    message: 1,
-  },
-]
-
 let texts = [
   {
     id: 1,
     text: "hello",
   }
 ]
-
 let voices = [
-    {
-      id: 1,
-      voice: "hello",
-    }
-  ]
-  
-let images =[
-
+  {
+    id: 1,
+    voice: "hello",
+  }
+]
+let images = [
   {
     id: 1,
     image: "http://localhost:3000/uploads/1730033323200.png",
   }
-
 ];
-
 let chats = [
   {
+    id: 23,
     from: 1,
     to: 2,
     text: 1,
     image: 1,
     voice: 2,
-    from: 2,
-    time:22323,
+    time: 22323,
   },
 
   {
+    id:232,
     from: 1,
     to: 2,
     text: 1,
     image: 1,
     voice: 2,
-    from: 2,
+    time: 22323,
   },
 ];
-
-
-
-let body = {
-    from:2,
-    to:3
-}
-let v = chats.filter ((e)=>e.from == body.from && e.to == body.to) 
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-
 
 let users = [
   {
@@ -98,7 +75,7 @@ let users = [
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFsYXdlZndlZndlZiIsInBob25lTnVtYmVyIjoiMDkzNDU1MjEwMSIsImlhdCI6MTczMDAzMzMyMywiZXhwIjoxNzMwMDM2OTIzfQ.vIZ4U3JIRFx8xM7kSnL3Akv3WMg_aHOvSEg8A4n9-gk",
     contacts: [2, 3, 34],
   },
-];
+]; 
 
 
 

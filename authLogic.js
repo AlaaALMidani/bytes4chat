@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const TelegramBot = require("node-telegram-bot-api");
-const token = "7941282977:AAGgsLx0_fJcrIHReRb48IyksbuvnDcCDSM"; 
+const token = "7941282977:AAGgsLx0_fJcrIHReRb48IyksbuvnDcCDSM";
 const bot = new TelegramBot(token, { polling: true });
 
 
@@ -30,7 +30,8 @@ class User {
     phoneNumber,
     image,
     token,
-  }) {
+  }) 
+  {
     this.id = id;
     this.username = username;
     this.firstName = firstName;

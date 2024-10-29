@@ -61,49 +61,57 @@
       background: #efefef;
     }
 
+    #fileInput {
+      margin: 0.25rem;
+    }
+
   </style>
 </head>
 
 <body>
   <ul id="messages"></ul>
   <form id="form" action="">
+    <input type="file" id="fileInput" />
     <input id="input" autocomplete="off" /><button>Send</button>
   </form>
   <script src="/socket.io/socket.io.js"></script>
   <script>
-
-    userId = 1
+    userId = 3
     const socket = io();
     socket.emit("join", userId);
-
     const form = document.getElementById("form");
     const input = document.getElementById("input");
     const messages = document.getElementById("messages");
+    const fileInput = document.getElementById("fileInput");
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (input.value) {
-
-
-        socket.emit("privateMessage", 3,'weofw', { text: input.value });
-
-
-        input.value = "";
+      let fileData = null;
+      const messageText = input.value;
+      if (fileInput.files[0]) {
+        fileData = await readFileAsDataURL(fileInput.files[0]);
       }
-    });
+      if (messageText || fileData) {
+        socket.emit("privateMessage", 1, 'weofw', { text: messageText, file: fileData });
+        input.value = "";
+        fileInput.value = ""; // Clear file input
+      }
+
+    }); 
+    async function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
 
     socket.on("privateMessage", (id, msg) => {
-
-
-
       const item = document.createElement("li");
       item.textContent = msg;
       messages.appendChild(item);
       window.scrollTo(0, document.body.scrollHeight);
-
-
-
-
     });
   </script>
 </body>
