@@ -1,29 +1,51 @@
-var bodyParser = require("body-parser");
 const express = require("express");
+const bodyParser = require("body-parser");
 const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const mongoose = require("mongoose");
+const { join } = require("node:path");
+const { Server } = require("socket.io");
+const { createServer } = require("http");
 const Auth = require("./authLogic");
 const auth = new Auth();
 const app = express();
-const { join } = require("node:path");
-const { Server } = require("socket.io");
-const { createServer } = require("node:http");
 const server = createServer(app);
 const io = new Server(server);
 
+// connect MongoDB
+mongoose.connect("mongodb://localhost:27017/chat-app");
+
+// message Schema
+const messageSchema = new mongoose.Schema({
+  text: String,
+  from: String,
+  to: String,
+  image: String,
+  voice: String,
+  file: String,
+  timestamp: { type: Date, default: Date.now },
+});
+const Message = mongoose.model("Message", messageSchema);
+
+// user Schema
+const userSchema = new mongoose.Schema({
+  username: String,
+  firstName: String,
+  lastName: String,
+  gender: String,
+  phoneNumber: String,
+  image: String,
+});
+const User = mongoose.model("User", userSchema);
 
 const port = 3000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
-app.use((req, res, next) => {
-  console.log(req.method, req.url, new Date(), res.status);
-  next();
-});
+app.use(cors());
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
-app.use(cors());
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -35,30 +57,26 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-
+// Creat user on MongoDB
 app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(410).send("No files were uploaded.");
   }
   let user = req.body;
   let image;
+
   if (req.files.image) {
-
     image = req.files.image[0];
-    const imagePaths = `${req.protocol}://${req.get("host")}/uploads/${image.filename
-      }`;
-    user = { ...req.body, image: imagePaths };
+    const imagePath = `${req.protocol}://${req.get("host")}/uploads/${image.filename}`;
+    user = { ...req.body, image: imagePath };
   }
-  console.log(user);
+
   const registered = await auth.register(user);
-
   if (registered.ok) {
-    res.status(200).send({
-      ok: true,
-      message: "Welcome , you have been registered successfully",
-    });
+    const newUser = new User(user);
+    await newUser.save();
+    res.status(200).send({ ok: true, message: "Welcome, you have been registered successfully" });
   } else {
-
     if (image) {
       const imagePath = path.join(__dirname, "uploads", image.filename);
       fs.unlink(imagePath, (err) => {
@@ -71,6 +89,7 @@ app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
   }
 });
 
+// auth login 
 app.post("/login", async (req, res) => {
   const user = await auth.login({
     email: req.body.email,
@@ -79,149 +98,67 @@ app.post("/login", async (req, res) => {
   user.ok ? res.status(201).send(user) : res.status(401).send(user);
 });
 
-async function checkFiles(message, type) {
-  let fileUrl = null;
-  if (message[type]) {
-    const uploadResult = await upload.single('file')(null, {
-      file: message[type],
-    });
-    if (uploadResult.file) {
-      fileUrl = `/uploads/${uploadResult.file.filename}`;
-    }
-  }
-  return fileUrl
+//post and get messeg in MongoDB
+async function saveMessage(data) {
+  const message = new Message(data);
+  await message.save();
+  return message;
 }
-io.on('connection', (socket) => {
 
-  console.log('User connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-  socket.on('join', (userId) => {
+  socket.on("join", (userId) => {
     socket.userId = userId;
     socket.join(userId);
     console.log(`User ${userId} joined room ${userId}`);
   });
 
-
-  socket.on('privateMessage', async (recipientId, token, message) => {
-    console.log(socket.userId, message)
-    let imageUrl = checkFiles(message, 'image');
-    let voiceUrl = checkFiles(message, 'voice');
-    let fileUrl = checkFiles(message, 'file');
-
-    let msg = {
-      id: 23,
+  socket.on("privateMessage", async (recipientId, token, message) => {
+    const msg = {
       from: socket.userId,
       to: recipientId,
       text: message.text,
-      image: imageUrl,
-      voice: voiceUrl,
-      file: fileUrl,
-    }
-    io.to(recipientId).emit('privateMessage', socket.userId, msg);
+      image: message.image,
+      voice: message.voice,
+      file: message.file,
+    };
+
+    const savedMessage = await saveMessage(msg);
+    io.to(recipientId).emit("privateMessage", socket.userId, savedMessage);
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.userId);
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.userId);
   });
+});
 
+// users and masseges
+app.get("/contacts", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json({ contacts: users });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching contacts" });
+  }
+});
+
+// add new user
+app.post("/addContact", async (req, res) => {
+  const { username, phoneNumber } = req.body;
+  const existingUser = await User.findOne({ username, phoneNumber });
+
+  if (existingUser) {
+    res.status(200).json({ ok: true, user: existingUser });
+  } else {
+    res.status(404).json({ ok: false, message: "User not found, maybe you can invite them!" });
+  }
 });
 
 app.get("/", (req, res) => {
   res.sendFile(join(__dirname, "index.html"));
 });
 
-app.get("/second", (req, res) => {
-  res.sendFile(join(__dirname, "index1.html"));
-});
-
-app.get('/contacts', (req, res) => {
-  res.send(
-    {
-      contacts: [
-        {
-          "id": 2,
-          "username": "alaaalmedane",
-          "firstName": "alaa",
-          "lastName": "almedane",
-          "gender": "Male",
-          "phoneNumber": "0934552101",
-          "image": "http://localhost:3000/uploads/1730033323200.png",
-          "massages": [
-            {
-              from: 1,
-              to: 2,
-              text: 'good and you',
-              image: null,
-              voice: null,
-              time: 22324,
-            },
-            {
-              from: 2,
-              to: 1,
-              text: 'hi how are you ',
-              image: null,
-              voice: null,
-              time: 22323,
-            },
-          ]
-        },
-        {
-          "id": 3,
-          "username": "aliDabass",
-          "firstName": "ali",
-          "lastName": "dabass",
-          "gender": "Male",
-          "phoneNumber": "0934552101",
-          "image": "http://localhost:3000/uploads/1730033323200.png",
-          "massages": [
-            {
-              id: 12,
-              from: 3,
-              to: 1,
-              text: 'good and you',
-              image: null,
-              voice: null,
-              time: 22324,
-            },
-
-            {
-              id: 23,
-              from: 1,
-              to: 3,
-              text: 'hi ali how are you ',
-              image: null,
-              voice: null,
-              time: 22323,
-            },
-          ]
-        }
-
-      ]
-    }
-  )
-})
-
-app.get('/chats/:id/:receiver_id', (req, res) => {
-
-})
-
-app.post('/addContact', (req, res) => {
-
-  //check username 
-  //check number 
-  //if found and 
-
-
-
-
-
-
-  res.send({
-    ok: false,
-    message: 'user not found maybe you can invite him !'
-  })
-
-})
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
