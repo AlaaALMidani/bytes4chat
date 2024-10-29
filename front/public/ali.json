@@ -1,0 +1,60 @@
+{
+    "contacts": [
+        {
+            "id": 2,
+            "username": "alaaalmedane",
+            "firstName": "alaa",
+            "lastName": "almedane",
+            "gender": "Male",
+            "phoneNumber": "0934552101",
+            "image": "http://localhost:3000/uploads/1730033323200.png",
+            "massages": [
+                {
+                    "from": 1,
+                    "to": 2,
+                    "text": "good and you",
+                    "image": null,
+                    "voice": null,
+                    "time": 22324
+                },
+                {
+                    "from": 2,
+                    "to": 1,
+                    "text": "hi how are you ",
+                    "image": null,
+                    "voice": null,
+                    "time": 22323
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "username": "aliDabass",
+            "firstName": "ali",
+            "lastName": "dabass",
+            "gender": "Male",
+            "phoneNumber": "0934552101",
+            "image": "http://localhost:3000/uploads/1730033323200.png",
+            "massages": [
+                {
+                    "id": 12,
+                    "from": 3,
+                    "to": 1,
+                    "text": "good and you",
+                    "image": null,
+                    "voice": null,
+                    "time": 22324
+                },
+                {
+                    "id": 23,
+                    "from": 1,
+                    "to": 3,
+                    "text": "hi ali how are you ",
+                    "image": null,
+                    "voice": null,
+                    "time": 22323
+                }
+            ]
+        }
+    ]
+}
