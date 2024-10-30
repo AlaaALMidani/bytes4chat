@@ -15,6 +15,7 @@ class User {
     phoneNumber,
     image,
     token,
+    contacts,
   }) {
     this.id = id;
     this.username = username;
@@ -24,6 +25,7 @@ class User {
     this.phoneNumber = phoneNumber;
     this.image = image;
     this.token = token;
+    this.contacts = contacts
   }
 }
 class Auth {
@@ -140,6 +142,7 @@ class Auth {
       return null; // Or throw the error, depending on your error handling strategy
     }
   }
+
   async register(user) {
     const users = await this.readJson(this.filePath);
     const validation = this.validate(user, users);
@@ -152,6 +155,7 @@ class Auth {
         ...user,
         id: users.length + 1,
         token: token,
+        contacts: [],
       })
     );
     this.writeJson(this.filePath, users);
@@ -170,6 +174,29 @@ class Auth {
       }
     }
     return { ok: false, message: "email or password isn't correct" };
+  }
+  async addContact(senderId, contactId) {
+    const users = await this.readJson(this.filePath);
+    let contact = null
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].id == contactId) {
+        contact = users[i]
+      }
+    }
+    if (contact) {
+      for (let i = 0; i < users.length; i++) {
+        if (users[i].id == senderId) {
+          users[i].contact.push(
+            {
+              ...contact
+              , messages: []
+            }
+          )
+        }
+      }
+    } else {
+      return { ok: false, message: 'User not found' }
+    }
   }
 }
 module.exports = Auth;

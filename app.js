@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 
-const baseUrl = 'https://eec9-212-8-253-146.ngrok-free.app'
+const baseUrl = 'https://eec9-212-8-253-146.ngrok-free.app/'
 const port = 3000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
@@ -67,7 +67,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Creat user on MongoDB
+// Creat user on MongoDB 
 app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(410).send("No files were uploaded.");
@@ -89,7 +89,6 @@ app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
     await newUser.save();
     res.status(200).send({ ok: true, message: "Welcome, you have been registered successfully" });
   } else {
-    res.send({ h: 'fw' })
     if (registered.ok) {
       res.status(200).send(registered);
     }
@@ -124,6 +123,18 @@ async function saveMessage(data) {
   return message;
 }
 
+async function checkFiles(message, type) {
+  let fileUrl = null;
+  if (message[type]) {
+    const uploadResult = await upload.single('file')(null, {
+      file: message[type],
+    });
+    if (uploadResult.file) {
+      fileUrl = `/uploads/${uploadResult.file.filename}`;
+    }
+  }
+  return fileUrl
+}
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
@@ -133,7 +144,7 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined room ${userId}`);
   });
 
-  socket.on ("privateMessage", async ( senderId,recipientId, message) => {
+  socket.on("privateMessage", async (senderId, recipientId, message) => {
     let imageUrl = checkFiles(message, 'image');
     let voiceUrl = checkFiles(message, 'voice');
     let fileUrl = checkFiles(message, 'file');
@@ -143,19 +154,15 @@ io.on("connection", (socket) => {
       from: socket.userId,
       to: recipientId,
       text: message.text,
-      image: imageUrl,
-      voice: voiceUrl,
-      file: fileUrl,
+      image: 'imageUrl',
+      voice: 'voiceUrl',
+      file: 'fileUrl',
     }
-
     const savedMessage = await saveMessage(msg);
     io.to(recipientId).emit("privateMessage", socket.userId, savedMessage);
-
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.userId)
     });
-
-
   })
 });
 
@@ -165,89 +172,89 @@ app.get("/", (req, res) => {
 
 app.get("/second", (req, res) => {
   res.sendFile(join(__dirname, "index1.html"));
-}); 
+});
 
-  app.get('/contacts', (req, res) => {
-    res.send(
-      {
-        contacts: [
-          {
-            "id": 2,
-            "username": "alaaalmedane",
-            "firstName": "alaa",
-            "lastName": "almedane",
-            "gender": "Male",
-            "phoneNumber": "0934552101",
-            "image": `${baseUrl}/uploads/alaa.jpeg`,
-            "massages": [
-              {
-                from: 1,
-                to: 2,
-                text: 'good and you',
-               image: `${baseUrl}/uploads/alaa.jpeg`,
-                voice: `${baseUrl}/uploads/voice.mp3`,
-                time: 22324,
-              },
-              {
-                from: 2,
-                to: 1,
-                text: 'hi how are you ',
-                image: null,
-                voice: null,
-                time: 22323,
-              },
-            ]
-          },
-          {
-            "id": 3,
-            "username": "aliDabass",
-            "firstName": "ali",
-            "lastName": "dabass",
-            "gender": "Male",
-            "phoneNumber": "0934552101",
-            "image": `${baseUrl}/uploads/alaa.jpeg`,
-            "massages": [
-              {
-                id: 12,
-                from: 3,
-                to: 1,
-                text: 'good and you',
-                image: null,
-                voice: null,
-                time: 22324,
-              },
-              {
-                id: 23,
-                from: 1,
-                to: 3,
-                text: 'hi ali how are you ',
-                image: null,
-                voice: null,
-                time: 22323,
-              },
-            ]
-          }
+app.get('/contacts', (req, res) => {
 
-        ]
-      }
-    )
+  res.send(
+    {
+
+      contacts: [
+        {
+          "id": 2,
+          "username": "alaaalmedane",
+          "firstName": "alaa",
+          "lastName": "almedane",
+          "gender": "Male",
+          "phoneNumber": "0934552101",
+          "image": `${baseUrl}/uploads/alaa.jpeg`,
+          "messages": [
+            {
+              from: 1,
+              to: 2,
+              text: 'good and you',
+              image: `${baseUrl}/uploads/alaa.jpeg`,
+              voice: `${baseUrl}/uploads/voice.mp3`,
+              time: 22324,
+            },
+            {
+              from: 2,
+              to: 1,
+              text: 'hi how are you ',
+              image: null,
+              voice: null,
+              time: 22323,
+            },
+          ]
+        },
+        {
+          "id": 3,
+          "username": "aliDabass",
+          "firstName": "ali",
+          "lastName": "dabass",
+          "gender": "Male",
+          "phoneNumber": "0934552101",
+          "image": `${baseUrl}/uploads/alaa.jpeg`,
+          "messages": [
+            {
+              id: 12,
+              from: 3,
+              to: 1,
+              text: 'good and you',
+              image: null,
+              voice: null,
+              time: 22324,
+            },
+            {
+              id: 23,
+              from: 1,
+              to: 3,
+              text: 'hi ali how are you ',
+              image: null,
+              voice: null,
+              time: 22323,
+            },
+          ]
+        }
+
+      ]
+    }
+  )
+})
+
+
+
+app.post('/addContact', (req, res) => {
+
+  //check username 
+  //check number 
+  //if found and 
+  res.send({
+    ok: false,
+    message: 'user not found maybe you can invite him !'
   })
 
-  app.get('/chats/:id/:receiver_id', (req, res) => {
-
-  })
-
-  app.post('/addContact', (req, res) => {
-
-    //check username 
-    //check number 
-    //if found and 
-    res.send({
-      ok: false,
-      message: 'user not found maybe you can invite him !'
-    })
-
-  })
-  server.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-  });
+})
+server.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});

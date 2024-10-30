@@ -87,7 +87,7 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       let fileData = null;
-      const messageText = input.value;
+      const messageText ={text: input.value};
       if (fileInput.files[0]) {
         fileData = await readFileAsDataURL(fileInput.files[0]);
       }
