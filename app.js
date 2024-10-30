@@ -103,21 +103,22 @@ io.on('connection', (socket) => {
 
 
   socket.on('privateMessage', async (recipientId, token, message) => {
-    console.log(socket.userId, message)
-    let imageUrl = checkFiles(message, 'image');
-    let voiceUrl = checkFiles(message, 'voice');
-    let fileUrl = checkFiles(message, 'file');
+    console.log( message)
+    // let imageUrl = checkFiles(message, 'image'); 
+    // let voiceUrl = checkFiles(message, 'voice');
+    // let fileUrl = checkFiles(message, 'file');
 
-    let msg = {
-      id: 23,
-      from: socket.userId,
-      to: recipientId,
-      text: message.text,
-      image: imageUrl,
-      voice: voiceUrl,
-      file: fileUrl,
-    }
-    io.to(recipientId).emit('privateMessage', socket.userId, msg);
+    // let msg = {
+    //   id: 23,
+    //   from: socket.userId,
+    //   to: recipientId,
+    //   text: message.text,
+    //   image: imageUrl,
+    //   voice: voiceUrl,
+    //   file: fileUrl,
+    // }
+    console.log(message)
+    io.to(recipientId).emit('privateMessage', socket.userId, message);
   });
 
   socket.on('disconnect', () => {

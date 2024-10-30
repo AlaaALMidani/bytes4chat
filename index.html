@@ -85,7 +85,14 @@
       if (input.value) {
 
 
-        socket.emit("privateMessage", 3,'weofw', { text: input.value });
+        socket.emit("privateMessage", 3, token, {
+          from: 2,
+          to: 1,
+          text: 'hi how are you ',
+          image: null, 
+          voice: null,
+          time: 22323,
+        });
 
 
         input.value = "";
@@ -109,3 +116,4 @@
 </body>
 
 </html>
+ 

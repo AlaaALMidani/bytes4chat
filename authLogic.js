@@ -2,23 +2,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
-const TelegramBot = require("node-telegram-bot-api");
-const token = "7941282977:AAGgsLx0_fJcrIHReRb48IyksbuvnDcCDSM";
-const bot = new TelegramBot(token, { polling: true });
 
 
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  const verificationCode = generateVerificationCode(); // Function to generate a code (see below)
-
-  bot.sendMessage(chatId, `Your verification code is: ${verificationCode}`);
-  return verificationCode
-});
-
-// Function to generate a random verification code
-const generateVerificationCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-};
 
 class User {
   constructor({
@@ -58,7 +43,7 @@ class Auth {
     let data = [];
     if (fs.existsSync(filePath)) {
       const rawData = fs.readFileSync(filePath);
-      data = JSON.parse(rawData);
+      data = JSON.parse(rawData); 
     }
     return data;
   }
@@ -75,7 +60,7 @@ class Auth {
   }
   isExist(data, user, feild) {
     return data.find((e) => e[feild] === user[feild]);
-  }
+  } 
   validate(user, users) {
     const errors = {};
 
@@ -185,7 +170,7 @@ class Auth {
         return { ok: true, user: { password, ...e } };
       }
     }
-    return { ok: false, message: "email or password isn't correct " };
+    return { ok: false, message: "email or password isn't correct"};
   }
 }
 module.exports = Auth;
