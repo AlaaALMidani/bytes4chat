@@ -340,6 +340,7 @@ const MessagingApp = () => {
   useEffect(() => {
     Fetch.getUserContacts("token").then((data) => {
       setUsers(data.contacts);
+      console.log(data)
     });
     socket.emit("privateMessage", 3, 'token', {
       from: 2,
@@ -398,17 +399,17 @@ const MessagingApp = () => {
         const messageId = Date.now(); // Unique ID for message
         const message = {
           id: messageId,
-          content: trimmedMessage,
+          contacts: message.text,
           sender: currentUser.message.from,
           from: currentUser.name,
           to: selectedUser.name,
           
           timestamp: new Date().toISOString(),
           file: uploadedFile || null,
-          status: "pending", // Initial status
-          showFull: false, // Track if the full message is shown
+          status: "pending", 
+          showFull: false, 
         };
-    
+    console.log(message)
         setConversations((prev) => ({
           ...prev,
           [selectedUser.name]: [
@@ -494,7 +495,7 @@ const MessagingApp = () => {
                 />
                 <h3 className="text-lg font-medium text-gray-800">
                   {`${user.firstName} ${user.lastName}`} <br />
-                  {user.phoneNumber}
+                
                 </h3>
               </div>
             ))
@@ -521,7 +522,7 @@ const MessagingApp = () => {
             <div
               className="flex-1 overflow-y-auto p-4 space-y-4 relative"
               style={{
-                backgroundImage: `url(${wat})`,
+                // backgroundImage: `url(${wat})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 zIndex: 1,
@@ -553,7 +554,11 @@ const MessagingApp = () => {
                       }`}
                       style={{ wordBreak: "break-word" }}
                     >
-                      <p className="break-words">{message.content}</p>
+                     <p className="break-words">{message.content}</p>
+              
+                {message.text && (
+                  <p className="mt-1 text-sm text-gray-600">{message.text}</p>
+                )}
                       {message.file && (
                         <div className="mt-2">
                           {message.file.type.startsWith("image/") ? (
@@ -565,7 +570,7 @@ const MessagingApp = () => {
                           ) : (
                             <a
                               href={URL.createObjectURL(message.file)} // Create an object URL for other files
-                              download // This will allow users to download the file
+                              download 
                               className="text-blue-500 hover:underline"
                             >
                               {message.file.name}
@@ -592,6 +597,9 @@ const MessagingApp = () => {
                         className="w-10 h-10 rounded-full ml-2"
                       />
                     )}
+                  {users.map((user, index) => (
+                          <p key={index}> {user.messages[0].text} </p>
+                    ))}
                   </div>
                 ))}
               </div>
