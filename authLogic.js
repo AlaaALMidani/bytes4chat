@@ -15,8 +15,7 @@ class User {
     phoneNumber,
     image,
     token,
-  }) 
-  {
+  }) {
     this.id = id;
     this.username = username;
     this.firstName = firstName;
@@ -43,7 +42,7 @@ class Auth {
     let data = [];
     if (fs.existsSync(filePath)) {
       const rawData = fs.readFileSync(filePath);
-      data = JSON.parse(rawData); 
+      data = JSON.parse(rawData);
     }
     return data;
   }
@@ -60,7 +59,7 @@ class Auth {
   }
   isExist(data, user, feild) {
     return data.find((e) => e[feild] === user[feild]);
-  } 
+  }
   validate(user, users) {
     const errors = {};
 
@@ -156,7 +155,7 @@ class Auth {
       })
     );
     this.writeJson(this.filePath, users);
-    return { ok: true };
+    return { ok: true, user: users[users.length - 1] };
   }
   async login({ email, password }) {
     const users = await this.readJson(this.filePath);
@@ -170,7 +169,7 @@ class Auth {
         return { ok: true, user: { password, ...e } };
       }
     }
-    return { ok: false, message: "email or password isn't correct"};
+    return { ok: false, message: "email or password isn't correct" };
   }
 }
 module.exports = Auth;

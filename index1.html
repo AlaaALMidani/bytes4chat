@@ -77,7 +77,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     userId = 3
-    const socket = io();
+    const socket = io('https://6ed7-185-107-56-140.ngrok-free.app/');
     socket.emit("join", userId);
     const form = document.getElementById("form");
     const input = document.getElementById("input");
@@ -91,8 +91,8 @@
       if (fileInput.files[0]) {
         fileData = await readFileAsDataURL(fileInput.files[0]);
       }
-      if (messageText || fileData) {
-        socket.emit("privateMessage", 1, 'token', );
+      if (messageText) {
+        socket.emit("privateMessage", 1, 'token', messageText);
         input.value = "";
         fileInput.value = ""; // Clear file input
       }
