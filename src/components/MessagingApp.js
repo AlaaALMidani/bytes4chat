@@ -1,83 +1,89 @@
-import React, { useState, useEffect, useRef } from 'react';
-import UserList from './UserList';
-import ChatWindow from './ChatWindow';
-import MessageInput from './MessageInput';
-import  Robot  from '../asset/robot.gif';
-import anwar from '../asset/phot.jpeg';
-import ali from '../asset/download (4).jpeg';
-import alaa from '../asset/download (5).jpeg';
-import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { ChatSidebar } from "./ChatSidebar";
+import { ChatWindow } from "./ChatWindow";
+import io from "socket.io-client";
+import Fetch from "../fetchLogic";
 
 const MessagingApp = () => {
   const [conversations, setConversations] = useState({});
-  const [currentUser] = useState({ name: 'Anwar', image: anwar });
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [currentUser] = useState({ name: "Anwar", image: "path/to/anwar.jpg", id: 1 });
   const [selectedUser, setSelectedUser] = useState(null);
-  const chatContainerRef = useRef(null);
-  
-  const users = [
-    { name: 'Anwar', image: anwar },
-    { name: 'Ali', image: ali },
-    { name: 'Alaa', image: alaa },
-  ];
-  const MessagingApp = () => {
-    const { user } = useAuth();
-  
-    if (!user) {
-      return <Navigate to="/login" />;
-    }
-  }
+  const [users, setUsers] = useState([]);
+  const socket = useRef(null);
+
   useEffect(() => {
-    const webSocket = new WebSocket('https://d620-5-0-145-81.ngrok-free.app/contacts');
+    socket.current = io("https://ee8f-5-155-171-224.ngrok-free.app");
 
-    webSocket.onopen = () => {
-      console.log('WebSocket connection established');
-    };
-
-    webSocket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
+    socket.current.on("receiveMessage", (message) => {
       setConversations((prev) => ({
         ...prev,
-        [message.sender.name]: [...(prev[message.sender.name] || []), message],
+        [message.to]: [...(prev[message.to] || []), message],
       }));
-      scrollToBottom();
-    };
+    });
 
-    webSocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    webSocket.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
+    Fetch.getUserContacts("token").then((data) => {
+      setUsers(data.contacts);
+    });
 
     return () => {
-      webSocket.close();
+      socket.current.disconnect();
     };
   }, []);
 
-  const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  const handleMessageChange = (event) => {
+    setCurrentMessage(event.target.value);
+  };
+
+  const sendMessage = () => {
+    const trimmedMessage = currentMessage.trim();
+    if (trimmedMessage === "" && !uploadedFile) return;
+
+    const message = {
+      content: trimmedMessage,
+      sender: currentUser.id,
+      to: selectedUser.name,
+      timestamp: new Date().toISOString(),
+      file: uploadedFile || null,
+    };
+
+    socket.current.emit("sendMessage", message);
+    setConversations((prev) => ({
+      ...prev,
+      [selectedUser.name]: [
+        ...(prev[selectedUser.name] || []),
+        { ...message, status: "sent" },
+      ],
+    }));
+    
+    setCurrentMessage("");
+    setUploadedFile(null);
+    setFilePreview(null);
+  };
+
+  const uploadFile = (event) => {
+    const selectedFile = event.target.files[0];
+    setUploadedFile(selectedFile);
+    if (selectedFile) {
+      setFilePreview(URL.createObjectURL(selectedFile));
     }
   };
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <UserList users={users} selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
-      <div className="flex-1 bg-white flex flex-col relative">
-        {!selectedUser ? (
-          <div className="flex justify-center items-center flex-grow">
-<img src={Robot}>
-</img>          
-</div>
-        ) : (
-          <>
-            <ChatWindow conversations={conversations} selectedUser={selectedUser} />
-            <MessageInput currentUser={currentUser} selectedUser={selectedUser} setConversations={setConversations} />
-          </>
-        )}
-      </div>
+      <ChatSidebar users={users} selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+      <ChatWindow
+        selectedUser={selectedUser}
+        currentUser={currentUser}
+        conversations={conversations}
+        currentMessage={currentMessage}
+        handleMessageChange={handleMessageChange}
+        sendMessage={sendMessage}
+        uploadFile={uploadFile}
+        filePreview={filePreview}
+      />
     </div>
   );
 };
