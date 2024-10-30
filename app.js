@@ -11,9 +11,19 @@ const { createServer } = require("http");
 const Auth = require("./authLogic");
 const auth = new Auth();
 const app = express();
+app.use(cors());
+const { join } = require("node:path");
+const { Server } = require("socket.io");
+const { createServer } = require("node:http");
 const server = createServer(app);
-const io = new Server(server);
-
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins (INSECURE - ONLY FOR DEVELOPME NT)
+    methods: ["GET", "POST"],
+    allowedHeaders: ["*"], // <-- Add custom headers if needed
+    credentials: true,
+  },
+});
 // connect MongoDB
 mongoose.connect("mongodb://localhost:27017/chat-app");
 
@@ -40,12 +50,15 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
+
+const baseUrl = 'https://eec9-212-8-253-146.ngrok-free.app'
 const port = 3000;
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -69,6 +82,8 @@ app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
     image = req.files.image[0];
     const imagePath = `${req.protocol}://${req.get("host")}/uploads/${image.filename}`;
     user = { ...req.body, image: imagePath };
+    const imagePaths = `${req.protocol}://${req.get("host")}/uploads/${image.filename}`;
+    user = { ...req.body, image: imagePaths };
   }
 
   const registered = await auth.register(user);
@@ -77,15 +92,22 @@ app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
     await newUser.save();
     res.status(200).send({ ok: true, message: "Welcome, you have been registered successfully" });
   } else {
-    if (image) {
-      const imagePath = path.join(__dirname, "uploads", image.filename);
-      fs.unlink(imagePath, (err) => {
-        if (err) {
-          return res.status(500).send("Error deleting file.");
-        }
-      });
+    res.send({ h: 'fw' })
+    if (registered.ok) {
+      res.status(200).send(registered);
     }
-    res.status(400).send(registered);
+    else {
+
+      if (image) {
+        const imagePath = path.join(__dirname, "uploads", image.filename);
+        fs.unlink(imagePath, (err) => {
+          if (err) {
+            return res.status(500).send("Error deleting file.");
+          }
+        });
+      }
+      res.status(400).send(registered);
+    }
   }
 });
 
@@ -115,50 +137,141 @@ io.on("connection", (socket) => {
   });
 
   socket.on("privateMessage", async (recipientId, token, message) => {
-    const msg = {
+    let imageUrl = checkFiles(message, 'image');
+    let voiceUrl = checkFiles(message, 'voice');
+    let fileUrl = checkFiles(message, 'file');
+    let msg = {
+      id: 23,
       from: socket.userId,
       to: recipientId,
       text: message.text,
-      image: message.image,
-      voice: message.voice,
-      file: message.file,
-    };
+      image: imageUrl,
+      voice: voiceUrl,
+      file: fileUrl,
+    }
 
     const savedMessage = await saveMessage(msg);
     io.to(recipientId).emit("privateMessage", socket.userId, savedMessage);
+
+    socket.on("disconnect", () => {
+      console.log("User disconnected:", socket.userId)
+    });
+
+
+  })
+});
+
+  // users and masseges
+  app.get("/contacts", async (req, res) => {
+    try {
+      const users = await User.find();
+      res.json({ contacts: users });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching contacts" });
+    }
   });
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.userId);
+  // add new user
+  app.post("/addContact", async (req, res) => {
+    const { username, phoneNumber } = req.body;
+    const existingUser = await User.findOne({ username, phoneNumber });
+
+    if (existingUser) {
+      res.status(200).json({ ok: true, user: existingUser });
+    } else {
+      res.status(404).json({ ok: false, message: "User not found, maybe you can invite them!" });
+    }
   });
-});
 
-// users and masseges
-app.get("/contacts", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.json({ contacts: users });
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching contacts" });
-  }
-});
+  app.get("/", (req, res) => {
+    res.sendFile(join(__dirname, "index.html"));
+  });
 
-// add new user
-app.post("/addContact", async (req, res) => {
-  const { username, phoneNumber } = req.body;
-  const existingUser = await User.findOne({ username, phoneNumber });
+  app.get("/second", (req, res) => {
+    res.sendFile(join(__dirname, "index1.html"));
+  });
 
-  if (existingUser) {
-    res.status(200).json({ ok: true, user: existingUser });
-  } else {
-    res.status(404).json({ ok: false, message: "User not found, maybe you can invite them!" });
-  }
-});
+  app.get('/contacts', (req, res) => {
+    res.send(
+      {
+        contacts: [
+          {
+            "id": 2,
+            "username": "alaaalmedane",
+            "firstName": "alaa",
+            "lastName": "almedane",
+            "gender": "Male",
+            "phoneNumber": "0934552101",
+            "image": `${baseUrl}/uploads/alaa.jpeg`,
+            "massages": [
+              {
+                from: 1,
+                to: 2,
+                text: 'good and you',
+                image: `${baseUrl}/uploads/alaa.jpeg`,
+                voice: `${baseUrl}/uploads/voice.mp3`,
+                time: 22324,
+              },
+              {
+                from: 2,
+                to: 1,
+                text: 'hi how are you ',
+                image: null,
+                voice: null,
+                time: 22323,
+              },
+            ]
+          },
+          {
+            "id": 3,
+            "username": "aliDabass",
+            "firstName": "ali",
+            "lastName": "dabass",
+            "gender": "Male",
+            "phoneNumber": "0934552101",
+            "image": `${baseUrl}/uploads/alaa.jpeg`,
+            "massages": [
+              {
+                id: 12,
+                from: 3,
+                to: 1,
+                text: 'good and you',
+                image: null,
+                voice: null,
+                time: 22324,
+              },
+              {
+                id: 23,
+                from: 1,
+                to: 3,
+                text: 'hi ali how are you ',
+                image: null,
+                voice: null,
+                time: 22323,
+              },
+            ]
+          }
 
-app.get("/", (req, res) => {
-  res.sendFile(join(__dirname, "index.html"));
-});
+        ]
+      }
+    )
+  })
 
-server.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+  app.get('/chats/:id/:receiver_id', (req, res) => {
+
+  })
+
+  app.post('/addContact', (req, res) => {
+
+    //check username 
+    //check number 
+    //if found and 
+    res.send({
+      ok: false,
+      message: 'user not found maybe you can invite him !'
+    })
+
+  })
+  server.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
