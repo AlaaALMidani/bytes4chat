@@ -7,13 +7,10 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 const { join } = require("node:path");
 const { Server } = require("socket.io");
-const { createServer } = require("http");
 const Auth = require("./authLogic");
 const auth = new Auth();
 const app = express();
 app.use(cors());
-const { join } = require("node:path");
-const { Server } = require("socket.io");
 const { createServer } = require("node:http");
 const server = createServer(app);
 const io = new Server(server, {
@@ -161,36 +158,7 @@ io.on("connection", (socket) => {
   })
 });
 
-  // users and masseges
-  app.get("/contacts", async (req, res) => {
-    try {
-      const users = await User.find();
-      res.json({ contacts: users });
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching contacts" });
-    }
-  });
-
-  // add new user
-  app.post("/addContact", async (req, res) => {
-    const { username, phoneNumber } = req.body;
-    const existingUser = await User.findOne({ username, phoneNumber });
-
-    if (existingUser) {
-      res.status(200).json({ ok: true, user: existingUser });
-    } else {
-      res.status(404).json({ ok: false, message: "User not found, maybe you can invite them!" });
-    }
-  });
-
-  app.get("/", (req, res) => {
-    res.sendFile(join(__dirname, "index.html"));
-  });
-
-  app.get("/second", (req, res) => {
-    res.sendFile(join(__dirname, "index1.html"));
-  });
-
+  
   app.get('/contacts', (req, res) => {
     res.send(
       {
