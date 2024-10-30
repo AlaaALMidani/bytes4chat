@@ -73,7 +73,7 @@
   <script> 
 
     userId = 1
-    const socket = io('https://6ed7-185-107-56-140.ngrok-free.app/');
+    const socket = io('http://localhost:3000');
     socket.emit("join", userId);
 
     const form = document.getElementById("form");
@@ -85,7 +85,7 @@
       if (input.value) {
 
 
-        socket.emit("privateMessage", 3, 'token', {
+        socket.emit("privateMessage", 1, 3, {
           from: 2,
           to: 1,
           text:input.value,
@@ -100,8 +100,6 @@
     });
 
     socket.on("privateMessage", (id, msg) => {
-
-
 
       const item = document.createElement("li");
       item.textContent = msg;

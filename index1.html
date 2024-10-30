@@ -92,7 +92,7 @@
         fileData = await readFileAsDataURL(fileInput.files[0]);
       }
       if (messageText) {
-        socket.emit("privateMessage", 1, 'token', messageText);
+        socket.emit("privateMessage", 3, 1, messageText);
         input.value = "";
         fileInput.value = ""; // Clear file input
       }

@@ -133,10 +133,11 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined room ${userId}`);
   });
 
-  socket.on("privateMessage", async (recipientId, token, message) => {
+  socket.on ("privateMessage", async ( senderId,recipientId, message) => {
     let imageUrl = checkFiles(message, 'image');
     let voiceUrl = checkFiles(message, 'voice');
     let fileUrl = checkFiles(message, 'file');
+    console.log(message)
     let msg = {
       id: 23,
       from: socket.userId,
@@ -158,7 +159,14 @@ io.on("connection", (socket) => {
   })
 });
 
-  
+app.get("/", (req, res) => {
+  res.sendFile(join(__dirname, "index.html"));
+});
+
+app.get("/second", (req, res) => {
+  res.sendFile(join(__dirname, "index1.html"));
+}); 
+
   app.get('/contacts', (req, res) => {
     res.send(
       {
@@ -176,7 +184,7 @@ io.on("connection", (socket) => {
                 from: 1,
                 to: 2,
                 text: 'good and you',
-                image: `${baseUrl}/uploads/alaa.jpeg`,
+               image: `${baseUrl}/uploads/alaa.jpeg`,
                 voice: `${baseUrl}/uploads/voice.mp3`,
                 time: 22324,
               },
