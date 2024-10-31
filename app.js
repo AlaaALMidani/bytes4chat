@@ -7,8 +7,8 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 const { join } = require("node:path");
 const { Server } = require("socket.io");
-const Auth = require("./authLogic");
-const auth = new Auth();
+const Auth = require("./appLogic");
+const logic = new Auth();
 const app = express();
 app.use(cors());
 const { createServer } = require("node:http");
@@ -83,7 +83,7 @@ app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
     user = { ...req.body, image: imagePaths };
   }
 
-  const registered = await auth.register(user);
+  const registered = await logic.register(user);
   if (registered.ok) {
     const newUser = new User(user);
     await newUser.save();
@@ -107,9 +107,9 @@ app.post("/register", upload.fields([{ name: "image" }]), async (req, res) => {
   }
 });
 
-// auth login 
+// logic login 
 app.post("/login", async (req, res) => {
-  const user = await auth.login({
+  const user = await logic.login({
     email: req.body.email,
     password: req.body.password,
   });
@@ -244,17 +244,13 @@ app.get('/contacts', (req, res) => {
 
 
 
-app.post('/addContact', (req, res) => {
+app.post('/addContact', async (req, res) => {
 
-  //check username 
-  //check number 
-  //if found and 
-  res.send({
-    ok: false,
-    message: 'user not found maybe you can invite him !'
-  })
+  const result = await logic.addContact(req.body.senderId, { phoneNumber: req.body.phoneNumber, username: req.body.username })
+  res.send(result)
 
 })
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+ 

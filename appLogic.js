@@ -175,11 +175,12 @@ class Auth {
     }
     return { ok: false, message: "email or password isn't correct" };
   }
-  async addContact(senderId, contactId) {
+  async addContact(senderId, { phoneNumber, username }) {
     const users = await this.readJson(this.filePath);
+    
     let contact = null
     for (let i = 0; i < users.length; i++) {
-      if (users[i].id == contactId) {
+      if (users[i].username === username || users[i].phoneNumber === phoneNumber) {
         contact = users[i]
       }
     }
